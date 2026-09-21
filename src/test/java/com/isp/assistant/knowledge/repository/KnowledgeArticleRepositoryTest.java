@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import com.isp.assistant.ai.TechnicalAssistant;
 import com.isp.assistant.knowledge.entity.KnowledgeArticle;
 import com.isp.assistant.knowledge.entity.KnowledgeCategory;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -31,6 +33,9 @@ class KnowledgeArticleRepositoryTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @MockitoBean
+    private TechnicalAssistant technicalAssistant;
 
     @Test
     void flywayLoadsSeedAndCreatesGinIndex() {
