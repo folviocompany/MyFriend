@@ -24,10 +24,15 @@ public class ChatService {
             """;
 
     private final TechnicalAssistant technicalAssistant;
+    private final KnowledgeService knowledgeService;
     private final AppProperties properties;
 
-    public ChatService(TechnicalAssistant technicalAssistant, AppProperties properties) {
+    public ChatService(
+            TechnicalAssistant technicalAssistant,
+            KnowledgeService knowledgeService,
+            AppProperties properties) {
         this.technicalAssistant = technicalAssistant;
+        this.knowledgeService = knowledgeService;
         this.properties = properties;
     }
 
@@ -41,11 +46,16 @@ public class ChatService {
                     + properties.chat().maxMessageLength() + " caracteres.");
         }
 
-        String userPrompt = USER_PROMPT_TEMPLATE.formatted(
-                NO_KNOWLEDGE_CONTEXT,
-                neutralizeDelimiters(normalizedMessage));
         long startedAt = System.nanoTime();
+        String userPrompt = null;
         try {
+            String knowledgeContext = knowledgeService.findRelevantContext(normalizedMessage);
+            if (knowledgeContext.isBlank()) {
+                knowledgeContext = NO_KNOWLEDGE_CONTEXT;
+            }
+            userPrompt = USER_PROMPT_TEMPLATE.formatted(
+                    neutralizeDelimiters(knowledgeContext),
+                    neutralizeDelimiters(normalizedMessage));
             String response = technicalAssistant.answer(userPrompt);
             LOGGER.info("Chat concluído requestId={} result=success provider={} promptChars={} latencyMs={}",
                     MDC.get("requestId"), properties.ai().provider(), userPrompt.length(), elapsedMillis(startedAt));
@@ -54,7 +64,7 @@ public class ChatService {
         catch (RuntimeException exception) {
             LOGGER.info("Chat concluído requestId={} result={} provider={} promptChars={} latencyMs={}",
                     MDC.get("requestId"), exception.getClass().getSimpleName(), properties.ai().provider(),
-                    userPrompt.length(), elapsedMillis(startedAt));
+                    userPrompt == null ? 0 : userPrompt.length(), elapsedMillis(startedAt));
             throw exception;
         }
     }
