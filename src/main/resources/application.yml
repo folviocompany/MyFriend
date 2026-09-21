@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: isp-support-assistant
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/isp_assistant}
+    username: ${DB_USER:isp_assistant}
+    password: ${DB_PASSWORD:isp_assistant_dev}
+  flyway:
+    enabled: true
+  jpa:
+    open-in-view: false
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+  ai:
+    model:
+      chat: google-genai
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY:}
+        chat:
+          model: ${GEMINI_MODEL:gemini-3.5-flash}
+          temperature: 0.2
+          max-output-tokens: ${APP_AI_MAX_OUTPUT_TOKENS:1024}
+    retry:
+      max-attempts: 1
+    chat:
+      observations:
+        log-prompt: false
+        log-completion: false
+        include-error-logging: false
+
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+
+app:
+  ai:
+    provider: ${APP_AI_PROVIDER:gemini}
+    max-output-tokens: ${APP_AI_MAX_OUTPUT_TOKENS:1024}
+    timeout-seconds: ${APP_AI_TIMEOUT_SECONDS:30}
+  chat:
+    max-message-length: ${APP_CHAT_MAX_MESSAGE_LENGTH:2000}
+  api-key: ${APP_API_KEY:}
+  rate-limit-per-minute: ${APP_RATE_LIMIT_PER_MINUTE:20}
+  knowledge:
+    max-articles: ${APP_KNOWLEDGE_MAX_ARTICLES:3}
+    max-chars: ${APP_KNOWLEDGE_MAX_CHARS:6000}
+
+logging:
+  level:
+    root: INFO
+    org.springframework.ai: INFO
+    com.google.genai: INFO
+    org.hibernate.SQL: 'OFF'
+    org.hibernate.orm.jdbc.bind: 'OFF'
