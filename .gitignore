@@ -1,4 +1,14 @@
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+application-local.yml
+application-local.yaml
+application-local.properties
 target/
 
 .idea/

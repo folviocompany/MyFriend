@@ -99,6 +99,9 @@ Com a aplicação em execução:
 
 Quando `APP_API_KEY` está definida, o esquema `X-API-Key` aparece na documentação.
 
+Em ambientes públicos, desabilite o Swagger UI e o documento OpenAPI com
+`SPRINGDOC_SWAGGER_UI_ENABLED=false` e `SPRINGDOC_API_DOCS_ENABLED=false`.
+
 ## Testes
 
 Execute toda a verificação sem consumir cota do Gemini:
@@ -145,6 +148,15 @@ Remove-Item Env:GEMINI_API_KEY
 | `APP_KNOWLEDGE_MAX_CHARS` | `6000` | Máximo de caracteres do contexto |
 | `SERVER_ADDRESS` | `127.0.0.1` | Endereço de bind HTTP |
 | `PORT` | `8080` | Porta HTTP; preenchida automaticamente pelo Railway |
+| `SPRINGDOC_API_DOCS_ENABLED` | `true` | Habilita o documento OpenAPI; use `false` em produção |
+| `SPRINGDOC_SWAGGER_UI_ENABLED` | `true` | Habilita o Swagger UI; use `false` em produção |
+
+## Segurança de credenciais
+
+- Nunca coloque chaves, senhas, URLs privadas ou tokens no Git, README, logs, issues ou screenshots.
+- O `.env`, arquivos `.env.*`, chaves privadas e configurações locais sensíveis são ignorados pelo Git; apenas `.env.example` deve ser versionado.
+- Configure os valores reais diretamente no ambiente local ou no painel de variáveis do provedor.
+- Se uma credencial for publicada por engano, revogue e substitua imediatamente; removê-la apenas do commit mais recente não elimina o valor do histórico Git.
 
 ## Arquitetura
 
@@ -193,12 +205,14 @@ Crie dois serviços no mesmo projeto Railway: um serviço da aplicação conecta
 No serviço da aplicação, configure estas variáveis:
 
 ```dotenv
-GEMINI_API_KEY=sua-chave-real
-APP_API_KEY=uma-chave-interna-forte
+GEMINI_API_KEY=<defina-no-painel-do-Railway>
+APP_API_KEY=<gere-uma-chave-aleatoria-forte>
 SERVER_ADDRESS=0.0.0.0
 DB_URL=jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}
 DB_USER=${{Postgres.PGUSER}}
 DB_PASSWORD=${{Postgres.PGPASSWORD}}
+SPRINGDOC_API_DOCS_ENABLED=false
+SPRINGDOC_SWAGGER_UI_ENABLED=false
 ```
 
 `Postgres` deve corresponder exatamente ao nome do serviço de banco no Railway. As demais configurações podem usar os padrões seguros do `application.yml`.
