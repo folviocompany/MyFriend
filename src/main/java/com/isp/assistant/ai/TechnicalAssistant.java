@@ -56,6 +56,20 @@ public class TechnicalAssistant {
             throw new AiProviderUnavailableException(exception);
         }
         catch (RuntimeException exception) {
+            ApiException apiException = findCause(exception, ApiException.class);
+            if (apiException != null) {
+                logHttpFailure(apiException);
+                throw translateApiException(apiException);
+            }
+            GenAiIOException ioException = findCause(exception, GenAiIOException.class);
+            if (ioException != null) {
+                if (hasCause(ioException, InterruptedIOException.class)) {
+                    logTransportFailure("timeout");
+                    throw new AiProviderTimeoutException(ioException);
+                }
+                logTransportFailure("connection");
+                throw new AiProviderUnavailableException(ioException);
+            }
             logTransportFailure("unexpected");
             throw new AiProviderUnavailableException(exception);
         }
@@ -108,13 +122,17 @@ public class TechnicalAssistant {
     }
 
     private boolean hasCause(Throwable throwable, Class<? extends Throwable> type) {
+        return findCause(throwable, type) != null;
+    }
+
+    private <T extends Throwable> T findCause(Throwable throwable, Class<T> type) {
         Throwable current = throwable;
         while (current != null) {
             if (type.isInstance(current)) {
-                return true;
+                return type.cast(current);
             }
             current = current.getCause();
         }
-        return false;
+        return null;
     }
 }

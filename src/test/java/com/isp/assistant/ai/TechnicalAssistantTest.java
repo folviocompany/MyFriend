@@ -100,6 +100,34 @@ class TechnicalAssistantTest {
     }
 
     @Test
+    void unwrapsRuntimeExceptionWithProviderHttpCause(CapturedOutput output) {
+        when(chatClient.prompt().user("prompt").call().chatResponse())
+                .thenThrow(new RuntimeException(
+                        new ClientException(429, "RESOURCE_EXHAUSTED", "sensitive quota detail")));
+
+        TechnicalAssistant assistant = new TechnicalAssistant(chatClient);
+
+        assertThatThrownBy(() -> assistant.answer("prompt"))
+                .isInstanceOf(AiProviderRateLimitException.class);
+        assertThat(output).contains("providerStatus=429", "category=rate_limit", "retryable=false")
+                .doesNotContain("sensitive quota detail");
+    }
+
+    @Test
+    void unwrapsRuntimeExceptionWithTimeoutCause(CapturedOutput output) {
+        when(chatClient.prompt().user("prompt").call().chatResponse())
+                .thenThrow(new RuntimeException(
+                        new GenAiIOException(new SocketTimeoutException("sensitive timeout detail"))));
+
+        TechnicalAssistant assistant = new TechnicalAssistant(chatClient);
+
+        assertThatThrownBy(() -> assistant.answer("prompt"))
+                .isInstanceOf(AiProviderTimeoutException.class);
+        assertThat(output).contains("category=timeout", "retryable=false")
+                .doesNotContain("sensitive timeout detail");
+    }
+
+    @Test
     void rejectsEmptyProviderResponse() {
         when(chatClient.prompt().user("prompt").call().chatResponse())
                 .thenReturn(response(" ", "STOP", "gemini-test"));
